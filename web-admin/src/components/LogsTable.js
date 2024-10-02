@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {API, copy, isAdmin, showError, showSuccess, timestamp2string} from '../helpers';
 
-import {Table, Avatar, Tag, Form, Button, Layout, Select, Popover, Modal,Space,Tooltip } from '@douyinfe/semi-ui';
+import {Table, Avatar, Tag, Form, Button, Layout, Select, Popover, Modal, Space, Tooltip, Collapse, Typography} from '@douyinfe/semi-ui';
+import {IconChevronDown, IconCopy} from '@douyinfe/semi-icons'
 import {ITEMS_PER_PAGE} from '../constants';
 import {renderNumber, renderQuota, stringToColor} from '../helpers/render';
-
 
 const { Header} = Layout;
 
@@ -442,8 +442,139 @@ const LogsTable = () => {
         }
         
     }, []);
-    
-    
+
+    const renderModalContent = (content) => {
+        const lines = content.split('\n');
+        let currentRole = '';
+        let currentContent = [];
+        const blocks = [];
+
+        lines.forEach((line, index) => {
+            if (line.startsWith('【系统】：') || line.startsWith('【用户】：') || line.startsWith('【AI】：') || line.startsWith('【参数】：')) {
+                if (currentRole && currentContent.length > 0) {
+                    blocks.push({ role: currentRole, content: currentContent.join('\n').trim() })
+                    currentContent = [];
+                }
+                currentRole = line.split(':')[0].replace('【', '').replace('】', '');
+                currentContent.push(line.split(':').slice(1).join(':').trim());
+            } else {
+                currentContent.push(line);
+            }
+        });
+
+        if (currentRole && currentContent.length > 0) {
+            blocks.push({ role: currentRole, content: currentContent.join('\n').trim() })
+        }
+
+        if (blocks.length <= 0) {
+            return
+        }
+
+        // 解析message字段生成result数组
+        const firstBlockContent = JSON.parse(blocks[0].content);
+        const { messages, ...rest } = firstBlockContent;
+        const result = [
+            { role: '参数', content: JSON.stringify(rest, null, 2).trim() },
+            ...messages.map(message => {
+                const { role, content, ...otherProps } = message;
+                return {
+                    role,
+                    content: content?.trim() || '',
+                    otherProps: Object.keys(otherProps).length > 0 ? JSON.stringify(otherProps, null, 2) : null
+                };
+            }),
+            blocks[blocks.length - 1]
+        ];
+
+        // 展开所有面板
+        const defaultActiveKeys = result.map((_, index) => `${index}`)
+
+        return (
+            <Collapse defaultActiveKey={defaultActiveKeys} expandIcon={<IconChevronDown/>}>
+                {result.map((block, index) => (
+                    <Collapse.Panel
+                        header={
+                            <Typography.Text
+                                strong
+                                style={{
+                                    color: 'red',
+                                    fontSize: '16px'
+                                }}
+                            >
+                                {block.role}
+                            </Typography.Text>
+                        }
+                        itemKey={`${index}`}
+                        key={index}
+                    >
+                        <div style={{position: 'relative'}}>
+                            <Button
+                                icon={<IconCopy/>}
+                                theme="borderless"
+                                size="small"
+                                style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    zIndex: 1
+                                }}
+                                onClick={() => handleCopy(block.content)}
+                            />
+                            <pre style={{
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                fontSize: '14px',
+                                backgroundColor: 'var(--semi-color-fill-0)',
+                                padding: '16px',
+                                paddingRight: '40px', // 为复制按钮留出空间
+                                borderRadius: '6px'
+                            }}>
+                            {block.content}
+                        </pre>
+                        </div>
+                        {block.otherProps && (
+                            <div style={{position: 'relative', marginTop: '16px'}}>
+                                <Typography.Text strong style={{display: 'block', marginBottom: '8px'}}>
+                                    其他属性:
+                                </Typography.Text>
+                                <Button
+                                    icon={<IconCopy/>}
+                                    theme="borderless"
+                                    size="small"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '32px', // 调整以适应 "其他属性:" 文本
+                                        right: '8px',
+                                        zIndex: 1
+                                    }}
+                                    onClick={() => handleCopy(block.otherProps)}
+                                />
+                                <pre style={{
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                    fontSize: '14px',
+                                    backgroundColor: 'var(--semi-color-fill-0)',
+                                    padding: '16px',
+                                    paddingRight: '40px', // 为复制按钮留出空间
+                                    borderRadius: '6px'
+                                }}>
+                                {block.otherProps}
+                            </pre>
+                            </div>
+                        )}
+                    </Collapse.Panel>
+                ))}
+            </Collapse>
+        );
+    };
+
+    const handleCopy = async (content) => {
+        if (await copy(content)) {
+            showSuccess('内容已复制到剪贴板')
+        } else {
+            showError('复制失败，请手动复制')
+        }
+    };
  
     return (
         <>
@@ -530,10 +661,10 @@ const LogsTable = () => {
                     onOk={() => setIsModalOpen(false)}
                     onCancel={() => setIsModalOpen(false)}
                     closable={null}
-                    bodyStyle={{ height: '400px', overflow: 'auto' }} // 设置模态框内容区域样式
-                    width={800} // 设置模态框宽度
+                    bodyStyle={{ height: '70vh', overflow: 'auto' }} // 设置模态框内容区域样式
+                    width={1500} // 设置模态框宽度
                 >
-                    <p style={{ whiteSpace: 'pre-line' }}>{modalContent}</p>
+                    {renderModalContent(modalContent)}
                 </Modal>
             </Layout>
         </>

@@ -163,7 +163,7 @@ func Handler(c *gin.Context, resp *http.Response, promptTokens int, modelName st
 			StatusCode: resp.StatusCode,
 		}, nil, ""
 	}
-	if strings.HasPrefix(modelName, "gpt") {
+	if strings.HasPrefix(modelName, "gpt") || strings.HasPrefix(modelName, "o1") {
 		for _, choice := range textResponse.Choices {
 			responseText = choice.Message.StringContent()
 		}
