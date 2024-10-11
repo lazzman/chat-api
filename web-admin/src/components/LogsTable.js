@@ -4,7 +4,7 @@ import {API, copy, isAdmin, showError, showSuccess, timestamp2string} from '../h
 import {Table, Avatar, Tag, Form, Button, Layout, Select, Popover, Modal,Space,Tooltip } from '@douyinfe/semi-ui';
 import {ITEMS_PER_PAGE} from '../constants';
 import {renderNumber, renderQuota, stringToColor} from '../helpers/render';
-
+import ModelContent from './LogsModal';
 
 const { Header} = Layout;
 
@@ -542,9 +542,9 @@ const LogsTable = () => {
         }
         
     }, []);
-    
-    
- 
+
+
+
     return (
         <>
             <Layout>
@@ -658,10 +658,10 @@ const LogsTable = () => {
                     onOk={() => setIsModalOpen(false)}
                     onCancel={() => setIsModalOpen(false)}
                     closable={null}
-                    bodyStyle={{ height: '400px', overflow: 'auto' }} // 设置模态框内容区域样式
-                    width={800} // 设置模态框宽度
+                    bodyStyle={{ height: '70vh', overflow: 'auto' }} // 设置模态框内容区域样式
+                    width={1500} // 设置模态框宽度
                 >
-                    <p style={{ whiteSpace: 'pre-line' }}>{modalContent}</p>
+                    <ModelContent content={modalContent} />
                 </Modal>
             </Layout>
         </>
