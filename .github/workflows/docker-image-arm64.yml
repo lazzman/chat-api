@@ -48,14 +48,14 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GAYHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: |
-            ai365/chat-api-arm
+            lazzman/chat-api-arm
             ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=tag
