@@ -316,7 +316,11 @@ func postConsumeQuota(ctx context.Context, usage *relaymodel.Usage, meta *util.R
 	LogContentEnabled, _ := strconv.ParseBool(config.OptionMap["LogContentEnabled"])
 	logContent := ""
 	if LogContentEnabled {
-		logContent = fmt.Sprintf("用户: %s \nAI: %s", usertext, aitext)
+		textRequestJsonBytes, err := json.Marshal(textRequest)
+		if err != nil {
+			logger.Error(ctx, "error marshaling text request: "+err.Error())
+		}
+		logContent = fmt.Sprintf("%s\n【Request Body】:\n%s\n【Response Body】:\n%s", usertext, string(textRequestJsonBytes), aitext)
 	}
 	err = model.PostConsumeTokenQuota(meta.TokenId, quotaDelta)
 	if err != nil {
