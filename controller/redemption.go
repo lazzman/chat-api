@@ -84,10 +84,10 @@ func AddRedemption(c *gin.Context) {
 		})
 		return
 	}
-	if len(redemption.Name) == 0 || len(redemption.Name) > 20 {
+	if len(redemption.Name) == 0 || len(redemption.Name) > 40 {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "兑换码名称长度必须在1-20之间",
+			"message": "兑换码名称长度必须在1-40之间",
 		})
 		return
 	}
