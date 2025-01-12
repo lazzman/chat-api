@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"one-api/common"
 	"one-api/common/config"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -46,6 +47,16 @@ func GetRedemptionById(id int) (*Redemption, error) {
 	return &redemption, err
 }
 
+func parseRedemptionNameTimeLimit(name string) string {
+	// 匹配包含"限时"和数字后跟"天"或"日"的模式
+	pattern := regexp.MustCompile(`限时(\d+)[天日]`)
+	matches := pattern.FindStringSubmatch(name)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
+}
+
 func Redeem(key string, userId int) (quota int, err error) {
 	if key == "" {
 		return 0, errors.New("未提供兑换码")
@@ -66,6 +77,12 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if err != nil {
 			return errors.New("无效的兑换码")
 		}
+
+		// 在获取到 redemption 后解析名称中的天数
+		if timeLimit := parseRedemptionNameTimeLimit(redemption.Name); timeLimit != "" {
+			RedempTionCount = timeLimit
+		}
+
 		if redemption.Status != common.RedemptionCodeStatusEnabled {
 			return errors.New("该兑换码已被使用")
 		}
